@@ -43,10 +43,17 @@ jobs:
           path: dist
       - name: List artifacts
         run: ls -R dist
+      - name: Rename binaries for release
+        run: |
+          mv dist/ytcli-Linux/ytcli dist/ytcli-linux
+          mv dist/ytcli-macOS/ytcli dist/ytcli-macos
+          mv dist/ytcli-Windows/ytcli.exe dist/ytcli-windows.exe
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            dist/**/ytcli*
+            dist/ytcli-linux
+            dist/ytcli-macos
+            dist/ytcli-windows.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
