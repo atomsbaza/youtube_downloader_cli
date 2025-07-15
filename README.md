@@ -5,6 +5,40 @@ A simple, extensible YouTube downloader CLI written in Rust, using [yt-dlp](http
 > **Releases:**
 > Official releases and binaries are available on the [GitHub Releases page](https://github.com/<your-username>/youtube_downloader_cli/releases).
 
+## Downloading and Using Release Binaries
+
+Pre-built binaries for Linux, macOS, and Windows are available on the [GitHub Releases page](https://github.com/<your-username>/youtube_downloader_cli/releases) for each tagged release.
+
+### 1. Download the Binary
+Go to the [Releases page](https://github.com/<your-username>/youtube_downloader_cli/releases) and download the appropriate file for your platform:
+
+| Platform | File Name            |
+|----------|---------------------|
+| Linux    | ytcli-linux         |
+| macOS    | ytcli-macos         |
+| Windows  | ytcli-windows.exe   |
+
+### 2. Make the Binary Executable (Linux/macOS)
+After downloading, you may need to give the binary execute permissions:
+```sh
+chmod +x ytcli-linux   # or ytcli-macos
+```
+
+### 3. Run the CLI
+**Linux/macOS:**
+```sh
+./ytcli-linux "https://www.youtube.com/watch?v=..."
+# or
+./ytcli-macos "https://www.youtube.com/watch?v=..."
+```
+
+**Windows:**
+```sh
+ytcli-windows.exe "https://www.youtube.com/watch?v=..."
+```
+
+You can use all the same options and environment variables as described below.
+
 ## Features
 - Download YouTube videos or extract audio as MP3, M4A, or WAV
 - Choose video quality (e.g., 720p, best, worst)
