@@ -27,11 +27,43 @@ impl Downloader for YtDlpDownloader {
         if let Some(out) = &video.output {
             cmd.args(["-o", &format!("{}.%(ext)s", out)]);
         }
+        // Playlist options from environment variables
+        if let Ok(start) = std::env::var("YTCLI_PLAYLIST_START") {
+            if !start.is_empty() {
+                cmd.args(["--playlist-start", &start]);
+            }
+        }
+        if let Ok(end) = std::env::var("YTCLI_PLAYLIST_END") {
+            if !end.is_empty() {
+                cmd.args(["--playlist-end", &end]);
+            }
+        }
+        if let Ok(items) = std::env::var("YTCLI_PLAYLIST_ITEMS") {
+            if !items.is_empty() {
+                cmd.args(["--playlist-items", &items]);
+            }
+        }
+        // Optionally add --ignore-errors if env var is set
+        if let Ok(ignore) = std::env::var("YTCLI_IGNORE_ERRORS") {
+            if ignore == "1" {
+                cmd.arg("--ignore-errors");
+            }
+        }
         let status = cmd.status().map_err(|e| e.to_string())?;
         if status.success() {
+            println!("✅ All videos downloaded successfully!");
             Ok(())
+        } else if let Some(code) = status.code() {
+            if code == 1 {
+                println!("⚠️  Some videos failed to download, but others may have succeeded. Please check your output directory.");
+                Err(format!("yt-dlp exited with status 1 (partial failure)"))
+            } else {
+                println!("❌ Download failed due to a critical error (exit code {}).", code);
+                Err(format!("yt-dlp exited with status: {}", code))
+            }
         } else {
-            Err(format!("yt-dlp exited with status: {}", status))
+            println!("❌ Download failed: yt-dlp process terminated by signal.");
+            Err("yt-dlp process terminated by signal".to_string())
         }
     }
 } 
