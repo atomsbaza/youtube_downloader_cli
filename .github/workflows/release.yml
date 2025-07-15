@@ -1,0 +1,51 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+      - name: Build
+        run: cargo build --release
+      - name: Prepare binary name
+        id: prep
+        run: |
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            echo "BIN=ytcli.exe" >> $GITHUB_ENV
+          else
+            echo "BIN=ytcli" >> $GITHUB_ENV
+          fi
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ytcli-${{ runner.os }}
+          path: target/release/${{ env.BIN }}
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+          path: dist
+      - name: List artifacts
+        run: ls -R dist
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            dist/**/ytcli*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
