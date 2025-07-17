@@ -1,7 +1,93 @@
-use std::process::Command;
+use std::io::{BufRead, BufReader};
+use std::process::{Command, Stdio};
 use crate::domain::{Downloader, Video};
 
 pub struct YtDlpDownloader;
+
+impl YtDlpDownloader {
+    /// Download with progress callback (0.0 to 1.0)
+    pub fn download_with_progress<F>(&self, video: &Video, mut progress_callback: F) -> Result<(), String>
+    where
+        F: FnMut(f32) + Send + 'static,
+    {
+        let mut cmd = Command::new("yt-dlp");
+        cmd.arg(&video.url);
+        if video.audio_only {
+            let audio_format = match video.file_type.as_deref().unwrap_or("mp3") {
+                "mp3" | "m4a" | "wav" => video.file_type.as_deref().unwrap_or("mp3"),
+                other => return Err(format!("Audio format '{}' is not supported. Use mp3, m4a, or wav.", other)),
+            };
+            cmd.args(["-f", "ba/b"]);
+            cmd.args(["--extract-audio", "--audio-format", audio_format]);
+        } else {
+            let format = match video.file_type.as_deref().unwrap_or("mp4") {
+                "mp4" => "bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4".to_string(),
+                "webm" => "bestvideo[ext=webm]+bestaudio[ext=webm]/webm".to_string(),
+                other => return Err(format!("Video format '{}' is not supported. Use mp4 or webm.", other)),
+            };
+            cmd.args(["-f", &format]);
+        }
+        if let Some(out) = &video.output {
+            cmd.args(["-o", &format!("{}.%(ext)s", out)]);
+        }
+        if let Ok(start) = std::env::var("YTCLI_PLAYLIST_START") {
+            if !start.is_empty() {
+                cmd.args(["--playlist-start", &start]);
+            }
+        }
+        if let Ok(end) = std::env::var("YTCLI_PLAYLIST_END") {
+            if !end.is_empty() {
+                cmd.args(["--playlist-end", &end]);
+            }
+        }
+        if let Ok(items) = std::env::var("YTCLI_PLAYLIST_ITEMS") {
+            if !items.is_empty() {
+                cmd.args(["--playlist-items", &items]);
+            }
+        }
+        if let Ok(ignore) = std::env::var("YTCLI_IGNORE_ERRORS") {
+            if ignore == "1" {
+                cmd.arg("--ignore-errors");
+            }
+        }
+        // Enable progress output
+        cmd.arg("--newline");
+        cmd.stderr(Stdio::piped());
+        cmd.stdout(Stdio::piped());
+        let mut child = cmd.spawn().map_err(|e| e.to_string())?;
+        let stdout = child.stdout.take().unwrap();
+        let reader = BufReader::new(stdout);
+        // Progress parsing loop
+        for line in reader.lines() {
+            if let Ok(line) = line {
+                // Look for lines like: [download]   5.3% of ...
+                if let Some(percent) = parse_yt_dlp_progress(&line) {
+                    progress_callback(percent / 100.0);
+                }
+            }
+        }
+        let status = child.wait().map_err(|e| e.to_string())?;
+        if status.success() {
+            progress_callback(1.0);
+            Ok(())
+        } else {
+            Err(format!("yt-dlp exited with status: {}", status))
+        }
+    }
+}
+
+/// Parse percentage from yt-dlp output line
+fn parse_yt_dlp_progress(line: &str) -> Option<f32> {
+    // Example: [download]  12.3% of ...
+    let trimmed = line.trim();
+    if let Some(idx) = trimmed.find('%') {
+        let start = trimmed[..idx].rfind(' ')?;
+        let percent_str = trimmed[start..idx].trim();
+        percent_str.parse::<f32>().ok()
+    } else {
+        None
+    }
+}
 
 impl Downloader for YtDlpDownloader {
     fn download(&self, video: &Video) -> Result<(), String> {
