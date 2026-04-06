@@ -11,3 +11,4 @@ path = "src/gui.rs"
 clap = { version = "4.0", features = ["derive"] }
 eframe = "0.27"
 egui = "0.27"
+rfd = "0.14"

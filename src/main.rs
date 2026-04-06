@@ -67,9 +67,11 @@ fn main() {
     let video = Video {
         url: cli.url.clone(),
         output: cli.output.clone(),
+        save_dir: None,
         quality: cli.quality.clone(),
         audio_only: cli.audio_only,
         file_type: cli.file_type.map(|ft| ft.as_str().to_string()),
+        playlist_items: cli.playlist_items.clone(),
     };
     let downloader = YtDlpDownloader;
     let usecase = DownloadVideoUseCase { downloader: &downloader };
@@ -78,7 +80,6 @@ fn main() {
     // (You may want to refactor Video struct and Downloader trait for full support)
     std::env::set_var("YTCLI_PLAYLIST_START", cli.playlist_start.map(|v| v.to_string()).unwrap_or_default());
     std::env::set_var("YTCLI_PLAYLIST_END", cli.playlist_end.map(|v| v.to_string()).unwrap_or_default());
-    std::env::set_var("YTCLI_PLAYLIST_ITEMS", cli.playlist_items.clone().unwrap_or_default());
     match usecase.execute(&video) {
         Ok(()) => {
             println!("✅ Download complete!");

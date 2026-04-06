@@ -24,3 +24,10 @@ target
 # Added by cargo
 
 /target
+
+# Downloaded media files (should not be committed)
+*.mp4
+*.webm
+*.mp3
+*.m4a
+*.wav
