@@ -35,3 +35,6 @@
 *.mp3
 *.m4a
 *.wav
+
+# Accidentally committed binaries
+src/main

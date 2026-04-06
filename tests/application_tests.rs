@@ -25,6 +25,8 @@ fn make_video(url: &str, audio_only: bool, file_type: &str) -> Video {
         quality: "best".to_string(),
         audio_only,
         file_type: Some(file_type.to_string()),
+        playlist_start: None,
+        playlist_end: None,
         playlist_items: None,
     }
 }
@@ -40,6 +42,8 @@ fn test_download_video_usecase_calls_downloader() {
         quality: "best".to_string(),
         audio_only: false,
         file_type: Some("mp4".to_string()),
+        playlist_start: None,
+        playlist_end: None,
         playlist_items: None,
     };
     let result = usecase.execute(&video);
@@ -76,6 +80,8 @@ fn test_download_with_save_dir() {
         quality: "720p".to_string(),
         audio_only: false,
         file_type: Some("mp4".to_string()),
+        playlist_start: None,
+        playlist_end: None,
         playlist_items: None,
     };
     let result = usecase.execute(&video);
@@ -94,6 +100,8 @@ fn test_download_with_playlist_items() {
         quality: "best".to_string(),
         audio_only: false,
         file_type: Some("mp4".to_string()),
+        playlist_start: Some(2),
+        playlist_end: Some(10),
         playlist_items: Some("1,3,5-7".to_string()),
     };
     let result = usecase.execute(&video);

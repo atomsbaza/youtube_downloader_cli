@@ -41,7 +41,7 @@ struct Cli {
     #[arg(short = 'a', long)]
     audio_only: bool,
 
-    /// Video quality (best, worst, 720p, etc.)
+    /// Video quality (best, worst, 720p, 480p, 360p, 240p, 144p)
     #[arg(short = 'q', long, default_value = "bv*+ba/b")]
     quality: String,
 
@@ -71,15 +71,13 @@ fn main() {
         quality: cli.quality.clone(),
         audio_only: cli.audio_only,
         file_type: cli.file_type.map(|ft| ft.as_str().to_string()),
-        playlist_items: cli.playlist_items.clone(),
+        playlist_start: cli.playlist_start,
+        playlist_end: cli.playlist_end,
+        playlist_items: cli.playlist_items,
     };
     let downloader = YtDlpDownloader;
     let usecase = DownloadVideoUseCase { downloader: &downloader };
     println!("🎬 Starting download: {}", video.url);
-    // Pass playlist options to yt-dlp via environment variable for now
-    // (You may want to refactor Video struct and Downloader trait for full support)
-    std::env::set_var("YTCLI_PLAYLIST_START", cli.playlist_start.map(|v| v.to_string()).unwrap_or_default());
-    std::env::set_var("YTCLI_PLAYLIST_END", cli.playlist_end.map(|v| v.to_string()).unwrap_or_default());
     match usecase.execute(&video) {
         Ok(()) => {
             println!("✅ Download complete!");

@@ -4,6 +4,10 @@ version = "0.1.0"
 edition = "2021"
 
 [[bin]]
+name = "ytcli"
+path = "src/main.rs"
+
+[[bin]]
 name = "gui"
 path = "src/gui.rs"
 

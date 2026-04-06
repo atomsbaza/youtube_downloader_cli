@@ -56,7 +56,7 @@ struct App {
     progress: Arc<Mutex<f32>>,
     /// Written by download thread when it finishes (Ok or Err)
     download_result: Arc<Mutex<Option<Result<(), String>>>>,
-    /// Set to true from download thread; false when a new download starts
+    /// Set to true to cancel; reset to false when a new download starts
     cancel_flag: Arc<AtomicBool>,
     /// Live speed string from yt-dlp, e.g. "1.23MiB/s"
     speed: Arc<Mutex<String>>,
@@ -336,6 +336,8 @@ impl eframe::App for App {
                                         quality: quality_value,
                                         audio_only,
                                         file_type: Some(file_type),
+                                        playlist_start: None,
+                                        playlist_end: None,
                                         playlist_items: if playlist_items.is_empty() {
                                             None
                                         } else {

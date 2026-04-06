@@ -53,24 +53,17 @@ fn build_yt_dlp_command(video: &Video) -> Result<Command, String> {
         (None, None) => {}
     }
 
-    // Playlist options: prefer Video fields, fall back to env vars
-    let playlist_items = video.playlist_items.clone().or_else(|| {
-        std::env::var("YTCLI_PLAYLIST_ITEMS").ok().filter(|s| !s.is_empty())
-    });
-    if let Some(items) = playlist_items {
-        cmd.args(["--playlist-items", &items]);
+    // Playlist options directly from Video fields
+    if let Some(start) = video.playlist_start {
+        cmd.args(["--playlist-start", &start.to_string()]);
+    }
+    if let Some(end) = video.playlist_end {
+        cmd.args(["--playlist-end", &end.to_string()]);
+    }
+    if let Some(items) = &video.playlist_items {
+        cmd.args(["--playlist-items", items]);
     }
 
-    if let Ok(start) = std::env::var("YTCLI_PLAYLIST_START") {
-        if !start.is_empty() {
-            cmd.args(["--playlist-start", &start]);
-        }
-    }
-    if let Ok(end) = std::env::var("YTCLI_PLAYLIST_END") {
-        if !end.is_empty() {
-            cmd.args(["--playlist-end", &end]);
-        }
-    }
     if let Ok(ignore) = std::env::var("YTCLI_IGNORE_ERRORS") {
         if ignore == "1" {
             cmd.arg("--ignore-errors");
@@ -149,7 +142,6 @@ impl YtDlpDownloader {
     /// Download with progress callbacks.
     /// `cancel` — set to true from any thread to abort; the child process is killed and
     /// the function returns `Err("Download cancelled")`.
-    /// `progress_callback` — called after each stdout line that contains progress.
     pub fn download_with_progress<F>(
         &self,
         video: &Video,
@@ -182,7 +174,6 @@ impl YtDlpDownloader {
             if let Some(progress) = parse_yt_dlp_line(&line) {
                 progress_callback(progress);
             }
-            // Check cancellation after each line so the process is killed promptly
             if cancel.load(Ordering::Relaxed) {
                 let _ = child.kill();
                 break;

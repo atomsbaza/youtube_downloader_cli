@@ -5,6 +5,8 @@ pub struct Video {
     pub quality: String,
     pub audio_only: bool,
     pub file_type: Option<String>,
+    pub playlist_start: Option<usize>,
+    pub playlist_end: Option<usize>,
     pub playlist_items: Option<String>,
 }
 
@@ -25,6 +27,8 @@ mod tests {
             quality: "best".to_string(),
             audio_only: false,
             file_type: Some("mp4".to_string()),
+            playlist_start: None,
+            playlist_end: None,
             playlist_items: None,
         };
         assert_eq!(video.url, "https://example.com");
@@ -43,6 +47,8 @@ mod tests {
             quality: "worst".to_string(),
             audio_only: true,
             file_type: Some("mp3".to_string()),
+            playlist_start: None,
+            playlist_end: None,
             playlist_items: None,
         };
         assert!(video.audio_only);
